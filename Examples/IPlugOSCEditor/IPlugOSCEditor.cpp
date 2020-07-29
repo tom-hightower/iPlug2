@@ -37,7 +37,7 @@ IPlugOSCEditor::IPlugOSCEditor(const InstanceInfo& info)
       WDL_String log;
       const char* ip = pGraphics->GetControlWithTag(kCtrlTagSendIP)->As<IEditableTextControl>()->GetStr();
       int port = static_cast<int>(pGraphics->GetControlWithTag(kCtrlTagSendPort)->As<IVNumberBoxControl>()->GetRealValue());
-      SetDesination(ip, port);
+      SetDestination(ip, port);
     };
     
     IRECT topRow = b.SubRectVertical(3, 0).GetMidVPadded(40.f);
@@ -60,7 +60,7 @@ IPlugOSCEditor::IPlugOSCEditor(const InstanceInfo& info)
     
     pGraphics->AttachControl(new IWebViewControl(bottomRow, true, [](IWebViewControl* pWebView){
       pWebView->LoadHTML("OSC Console");
-    }), kCtrlTagWebView);
+      }, nullptr, R"(C:\Users\oli\Dev\iPlug2\Examples\IPlugOSCEditor\packages\Microsoft.Web.WebView2.0.9.538\build\x64\WebView2Loader.dll)", R"(C:\Users\oli\Dev\iPlug2\Examples\IPlugOSCEditor\tmp)"), kCtrlTagWebView);
     
   };
 #endif
