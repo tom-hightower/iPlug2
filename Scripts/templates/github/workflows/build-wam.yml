@@ -1,3 +1,5 @@
+# workflow to build and publish WAM to github pages, builds on -v tags
+
 name: Build WAM
 
 on:
@@ -10,9 +12,7 @@ env:
   URL: https://acmeinc.github.io/PROJECT_TEMPLATE_PLACEHOLDER/
 
 jobs:
-
   build:
- 
     runs-on: ubuntu-latest
  
     steps:

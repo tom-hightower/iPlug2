@@ -1,3 +1,5 @@
+# workflow to build and github release, builds on -v tags
+
 name: Release
 
 on:
@@ -13,7 +15,7 @@ jobs:
     name: Create release
     runs-on: ubuntu-latest
     outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      upload_url: ${{steps.create_release.outputs.upload_url}}
     steps:
       - name: Check out repository
         uses: actions/checkout@v2
@@ -24,16 +26,16 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{github.ref}}
+          release_name: Release ${{github.ref}}
           body_path: iPlug2/Projects/${{env.PROJECT_NAME}}/installer/changelog.txt
 
   build:
     name: Build
     needs: create_release
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{matrix.os}}
     strategy:
       matrix:
         os: [macos-latest, windows-latest]
@@ -91,9 +93,9 @@ jobs:
       if: matrix.os == 'macOS-latest'
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       with:
-        upload_url: ${{ needs.create_release.outputs.upload_url }}
+        upload_url: ${{needs.create_release.outputs.upload_url}}
         asset_path: iPlug2/Projects/${{env.PROJECT_NAME}}/${{matrix.build_dir}}/out/${{env.PROJECT_NAME}}-v1.0.0-mac-dSYMs.zip
         asset_name: ${{env.PROJECT_NAME}}-v1.0.0-mac-dSYMs.zip
         asset_content_type: application/zip
@@ -102,9 +104,9 @@ jobs:
       if: matrix.os == 'macOS-latest'
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       with:
-        upload_url: ${{ needs.create_release.outputs.upload_url }}
+        upload_url: ${{needs.create_release.outputs.upload_url}}
         asset_path: iPlug2/Projects/${{env.PROJECT_NAME}}/${{matrix.build_dir}}/out/${{env.PROJECT_NAME}}-v1.0.0-mac.dmg
         asset_name: ${{env.PROJECT_NAME}}-v1.0.0-mac.dmg
         asset_content_type: application/octet-stream
@@ -113,9 +115,9 @@ jobs:
       if: matrix.os == 'windows-latest'
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       with:
-        upload_url: ${{ needs.create_release.outputs.upload_url }}
+        upload_url: ${{needs.create_release.outputs.upload_url}}
         asset_path: iPlug2/Projects/${{env.PROJECT_NAME}}/${{matrix.build_dir}}/out/${{env.PROJECT_NAME}}-v1.0.0-win-pdbs.zip
         asset_name: ${{env.PROJECT_NAME}}-v1.0.0-win-pdbs.zip
         asset_content_type: application/zip
@@ -124,9 +126,9 @@ jobs:
       if: matrix.os == 'windows-latest'
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       with:
-        upload_url: ${{ needs.create_release.outputs.upload_url }}
+        upload_url: ${{needs.create_release.outputs.upload_url}}
         asset_path: iPlug2/Projects/${{env.PROJECT_NAME}}/${{matrix.build_dir}}/out/${{env.PROJECT_NAME}}-v1.0.0-win.zip
         asset_name: ${{env.PROJECT_NAME}}-v1.0.0-win.zip
         asset_content_type: application/zip
