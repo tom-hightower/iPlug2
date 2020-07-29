@@ -20,6 +20,11 @@ if [ "$1" == "demo" ]; then
   DEMO=1
 fi
 
+BUILD_INSTALLER=1
+if [ "$2" == "zip" ]; then
+  BUILD_INSTALLER=0
+fi
+
 VERSION=`echo | grep PLUG_VERSION_HEX config.h`
 VERSION=${VERSION//\#define PLUG_VERSION_HEX }
 VERSION=${VERSION//\'}
@@ -35,10 +40,10 @@ PLUGIN_NAME=`echo | grep BUNDLE_NAME config.h`
 PLUGIN_NAME=${PLUGIN_NAME//\#define BUNDLE_NAME }
 PLUGIN_NAME=${PLUGIN_NAME//\"}
 
-DMG_NAME=$PLUGIN_NAME-v$FULL_VERSION-mac
+ARCHIVE_NAME=$PLUGIN_NAME-v$FULL_VERSION-mac
 
 if [ $DEMO == 1 ]; then
-  DMG_NAME=$DMG_NAME-demo
+  ARCHIVE_NAME=$ARCHIVE_NAME-demo
 fi
 
 VST2=`echo | grep VST2_PATH $XCCONFIG`
@@ -58,8 +63,8 @@ AAX=`echo | grep AAX_PATH $XCCONFIG`
 AAX=${AAX//\AAX_PATH = }/$PLUGIN_NAME.aaxplugin
 AAX_FINAL="/Library/Application Support/Avid/Audio/Plug-Ins/$PLUGIN_NAME.aaxplugin"
 
-PKG="installer/build-mac/$PLUGIN_NAME Installer.pkg"
-PKG_US="installer/build-mac/$PLUGIN_NAME Installer.unsigned.pkg"
+PKG="build-mac/installer/$PLUGIN_NAME Installer.pkg"
+PKG_US="build-mac/installer/$PLUGIN_NAME Installer.unsigned.pkg"
 
 CERT_ID=`echo | grep CERTIFICATE_ID $XCCONFIG`
 CERT_ID=${CERT_ID//\CERTIFICATE_ID = }
@@ -83,16 +88,6 @@ sleep 2
 echo "touching source to force recompile"
 echo ""
 touch *.cpp
-
-#---------------------------------------------------------------------------------------------------------
-#remove existing tmp folder (for zip, if used instead of pkg)
-
-#if [ -d installer/tmp ]
-#then
-#  rm -R installer/tmp
-#fi
-
-#mkdir installer/tmp
 
 #---------------------------------------------------------------------------------------------------------
 #remove existing binaries
@@ -145,19 +140,19 @@ echo "setting icons"
 echo ""
 
 if [ -d $AU ]; then
-  SetFileIcon -image resources/$PLUGIN_NAME.icns -file $AU
+  ./$SCRIPTS/SetFileIcon -image resources/$PLUGIN_NAME.icns -file $AU
 fi
 
 if [ -d $VST2 ]; then
-  SetFileIcon -image resources/$PLUGIN_NAME.icns -file $VST2
+  ./$SCRIPTS/SetFileIcon -image resources/$PLUGIN_NAME.icns -file $VST2
 fi
 
 if [ -d $VST3 ]; then
-  SetFileIcon -image resources/$PLUGIN_NAME.icns -file $VST3
+  ./$SCRIPTS/SetFileIcon -image resources/$PLUGIN_NAME.icns -file $VST3
 fi
 
 if [ -d "${AAX}" ]; then
-  SetFileIcon -image resources/$PLUGIN_NAME.icns -file "${AAX}"
+  ./$SCRIPTS/SetFileIcon -image resources/$PLUGIN_NAME.icns -file "${AAX}"
 fi
 
 #---------------------------------------------------------------------------------------------------------
@@ -198,85 +193,96 @@ fi
 
 #---------------------------------------------------------------------------------------------------------
 
-# echo "code-sign binaries with hardened runtime"
-# echo ""
-# codesign --force -s "Developer ID Application: ${CERT_ID}" -v $APP --deep --strict --options=runtime
-# xattr -cr $AU 
-# codesign --force -s "Developer ID Application: ${CERT_ID}" -v $AU --deep --strict --options=runtime
-# xattr -cr $VST2 
-# codesign --force -s "Developer ID Application: ${CERT_ID}" -v $VST2 --deep --strict --options=runtime
-# xattr -cr $VST3 
-# codesign --force -s "Developer ID Application: ${CERT_ID}" -v $VST3 --deep --strict --options=runtime
+if [ $BUILD_INSTALLER == 1 ]; then
+  #---------------------------------------------------------------------------------------------------------
+  # installer
 
-#---------------------------------------------------------------------------------------------------------
-# installer
-sudo rm -R -f installer/$PLUGIN_NAME-mac.dmg
+  sudo rm -R -f build-mac/$PLUGIN_NAME-*.dmg
 
-echo "building installer"
-echo ""
+  echo "building installer"
+  echo ""
 
-./scripts/makeinstaller-mac.sh $FULL_VERSION
+  ./scripts/makeinstaller-mac.sh $FULL_VERSION
 
-# echo "code-sign installer for Gatekeeper on macOS 10.8+"
-# echo ""
-# mv "${PKG}" "${PKG_US}"
-# productsign --sign "Developer ID Installer: ""${CERT_ID}" "${PKG_US}" "${PKG}"
-# rm -R -f "${PKG_US}"
+  # echo "code-sign installer for Gatekeeper on macOS 10.8+"
+  # echo ""
+  # mv "${PKG}" "${PKG_US}"
+  # productsign --sign "Developer ID Installer: ""${CERT_ID}" "${PKG_US}" "${PKG}"
+  # rm -R -f "${PKG_US}"
 
-#set installer icon
-SetFileIcon -image resources/$PLUGIN_NAME.icns -file "${PKG}"
+  #set installer icon
+  ./$SCRIPTS/SetFileIcon -image resources/$PLUGIN_NAME.icns -file "${PKG}"
 
-#---------------------------------------------------------------------------------------------------------
-# dmg, can use dmgcanvas http://www.araelium.com/dmgcanvas/ to make a nice dmg
-echo "building dmg"
-echo ""
+  #---------------------------------------------------------------------------------------------------------
+  # dmg, can use dmgcanvas http://www.araelium.com/dmgcanvas/ to make a nice dmg
+  echo "building dmg"
+  echo ""
 
-if [ -d installer/$PLUGIN_NAME.dmgCanvas ]; then
- dmgcanvas installer/$PLUGIN_NAME.dmgCanvas installer/$DMG_NAME.dmg
+  if [ -d installer/$PLUGIN_NAME.dmgCanvas ]; then
+    dmgcanvas installer/$PLUGIN_NAME.dmgCanvas build-mac/$ARCHIVE_NAME.dmg
+  else
+    cp installer/changelog.txt build-mac/installer/
+    cp installer/known-issues.txt build-mac/installer/
+    cp "manual/$PLUGIN_NAME manual.pdf" build-mac/installer/
+    hdiutil create build-mac/$ARCHIVE_NAME.dmg -format UDZO -srcfolder build-mac/installer/ -ov -anyowners -volname $PLUGIN_NAME
+  fi
+
+  sudo rm -R -f build-mac/installer/
 else
- cp installer/changelog.txt installer/build-mac/
- cp installer/known-issues.txt installer/build-mac/
- cp "manual/$PLUGIN_NAME manual.pdf" installer/build-mac/
- hdiutil create installer/$DMG_NAME.dmg -format UDZO -srcfolder installer/build-mac/ -ov -anyowners -volname $PLUGIN_NAME
+  #---------------------------------------------------------------------------------------------------------
+  # zip
+
+  if [ -d build-mac/zip ]; then
+    rm -R build-mac/zip
+  fi
+
+  mkdir -p build-mac/zip
+
+  if [ -d $APP ]; then
+    cp -R $APP build-mac/zip/$PLUGIN_NAME.app
+  fi
+
+  if [ -d $AU ]; then
+    cp -R $AU build-mac/zip/$PLUGIN_NAME.component
+  fi
+
+  if [ -d $VST2 ]; then
+    cp -R $VST2 build-mac/zip/$PLUGIN_NAME.vst
+  fi
+
+  if [ -d $VST3 ]; then
+    cp -R $VST3 build-mac/zip/$PLUGIN_NAME.vst3
+  fi
+
+  if [ -d "${AAX_FINAL}" ]; then
+    cp -R $AAX_FINAL build-mac/zip/$PLUGIN_NAME.aaxplugin
+  fi
+
+  echo "zipping binaries..."
+  echo ""
+  ditto -c -k build-mac/zip build-mac/$ARCHIVE_NAME.zip
+  rm -R build-mac/zip
 fi
-
-# sudo rm -R -f installer/build-mac/
-
-#---------------------------------------------------------------------------------------------------------
-# echo "notarizing dmg"
-# echo ""
-
-# see notarise.sh for DEMO_BUNDLE_ID APP_SPECIFIC_APPLE_USERNAME APP_SPECIFIC_APPLE_PASSWORD args
-
-# if [ $DEMO == 1 ]; then
-#   $SCRIPTS/notarise.sh ../installer/$DMG_NAME.dmg DEMO_BUNDLE_ID APP_SPECIFIC_APPLE_USERNAME APP_SPECIFIC_APPLE_PASSWORD
-# else
-#   $SCRIPTS/notarise.sh ../installer/$DMG_NAME.dmg FULL_BUNDLE_ID APP_SPECIFIC_APPLE_USERNAME APP_SPECIFIC_APPLE_PASSWORD
-# fi
 
 #---------------------------------------------------------------------------------------------------------
 # dSYMs
-sudo rm -R -f installer/*-dSYMs.zip
+sudo rm -R -f build-mac/*-dSYMs.zip
 
 echo "packaging dSYMs"
 echo ""
-zip -r ./installer/$PLUGIN_NAME-v$FULL_VERSION-dSYMs.zip ./build-mac/*.dSYM
+zip -r ./build-mac/$ARCHIVE_NAME-dSYMs.zip ./build-mac/*.dSYM
 
 #---------------------------------------------------------------------------------------------------------
-# zip
 
-# echo "copying binaries..."
-# echo ""
-# cp -R $AU installer/tmp/$PLUGIN_NAME.component
-# cp -R $VST2 installer/tmp/$PLUGIN_NAME.vst
-# cp -R $VST3 installer/tmp/$PLUGIN_NAME.vst3
-# cp -R $AAX installer/tmp/$PLUGIN_NAME.aaxplugin
-# cp -R $APP installer/tmp/$PLUGIN_NAME.app
-#
-# echo "zipping binaries..."
-# echo ""
-# ditto -c -k installer/tmp installer/$PLUGIN_NAME-mac.zip
-# rm -R installer/tmp
+# prepare out folder for CI
+
+echo "preparing output folder"
+echo ""
+mkdir -p ./build-mac/out
+if [ -f ./build-mac/$ARCHIVE_NAME.dmg ]; then
+  mv ./build-mac/$ARCHIVE_NAME.dmg ./build-mac/out
+fi
+mv ./build-mac/*.zip ./build-mac/out
 
 #---------------------------------------------------------------------------------------------------------
 

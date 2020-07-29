@@ -41,7 +41,7 @@ RSRCS="~/Music/${PRODUCT_NAME}/Resources"
 
 OUTPUT_BASE_FILENAME="${PRODUCT_NAME} Installer.pkg"
 
-TARGET_DIR="./installer/build-mac"
+TARGET_DIR="./build-mac/installer"
 PKG_DIR=${TARGET_DIR}/pkgs
 
 if [[ ! -d ${TARGET_DIR} ]]; then

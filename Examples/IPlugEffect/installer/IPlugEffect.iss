@@ -1,7 +1,7 @@
 [Setup]
 AppName=IPlugEffect
 AppContact=spam@spam.com
-AppCopyright=Copyright (C) 2019 MANUFACTURER
+AppCopyright=Copyright (C) 2020 MANUFACTURER
 AppPublisher=MANUFACTURER
 AppPublisherURL=http://www.spam.com
 AppSupportURL=http://www.spam.com
