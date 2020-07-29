@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# this script will update the versions in packages and innosetup installer files to match that in config.h
+# this script will update the versions in the innosetup installer files to match that in config.h, and switch in the demo readme for demo builds
 
 import plistlib, os, datetime, fileinput, glob, sys, string
 scriptpath = os.path.dirname(os.path.realpath(__file__))
@@ -24,14 +24,13 @@ def main():
   demo = 0
   
   if len(sys.argv) != 2:
-    print("Usage: update_installer_version.py demo(0 or 1)")
+    print("Usage: updateinstaller-win.py demo(0 or 1)")
     sys.exit(1)
   else:
     demo=int(sys.argv[1])
 
   config = parse_config(projectpath)
 
-# WIN INSTALLER
   print("Updating Windows Installer version info...")
   
   for line in fileinput.input(projectpath + "/installer/" + config['BUNDLE_NAME'] + ".iss",inplace=1):
