@@ -224,7 +224,7 @@ if [ $BUILD_INSTALLER == 1 ]; then
     cp installer/changelog.txt build-mac/installer/
     cp installer/known-issues.txt build-mac/installer/
     cp "manual/$PLUGIN_NAME manual.pdf" build-mac/installer/
-    hdiutil create build-mac/$ARCHIVE_NAME.dmg -format UDZO -srcfolder build-mac/installer/ -ov -anyowners -volname $PLUGIN_NAME
+    hdiutil create build-mac/$ARCHIVE_NAME.dmg -fs HFS+ -format UDZO -srcfolder build-mac/installer/ -ov -anyowners -volname $PLUGIN_NAME
   fi
 
   sudo rm -R -f build-mac/installer/
