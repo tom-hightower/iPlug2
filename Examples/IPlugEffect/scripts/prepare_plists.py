@@ -28,7 +28,7 @@ def main():
   CSResourcesFileMapped = True
   LSMinimumSystemVersion = xcconfig['DEPLOYMENT_TARGET']
 
-  print "Processing Info.plist files..."
+  print("Processing Info.plist files...")
 
 # VST3
 
