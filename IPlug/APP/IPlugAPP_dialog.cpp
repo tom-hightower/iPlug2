@@ -508,8 +508,9 @@ WDL_DLGRET IPlugAPPHost::PreferencesDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wPar
   return TRUE;
 }
 
-static void ClientResize(HWND hWnd, int nWidth, int nHeight)
+void IPlugAPPHost::WindowResize(int nWidth, int nHeight, bool move)
 {
+  static UINT flags = move ? 0 : SWP_NOMOVE | SWP_NOACTIVATE;
   RECT rcClient, rcWindow;
   POINT ptDiff;
   int screenwidth, screenheight;
@@ -520,14 +521,13 @@ static void ClientResize(HWND hWnd, int nWidth, int nHeight)
   x = (screenwidth / 2) - (nWidth / 2);
   y = (screenheight / 2) - (nHeight / 2);
   
-  GetClientRect(hWnd, &rcClient);
-  GetWindowRect(hWnd, &rcWindow);
+  GetClientRect(gHWND, &rcClient);
+  GetWindowRect(gHWND, &rcWindow);
 
   ptDiff.x = (rcWindow.right - rcWindow.left) - rcClient.right;
   ptDiff.y = (rcWindow.bottom - rcWindow.top) - rcClient.bottom;
   
-  SetWindowPos(hWnd, 0, x, y, nWidth + ptDiff.x, nHeight + ptDiff.y, 0);
-//  MoveWindow(hWnd, x, y, nWidth + ptDiff.x, nHeight + ptDiff.y, FALSE);
+  SetWindowPos(gHWND, 0, x, y, nWidth + ptDiff.x, nHeight + ptDiff.y, flags);
 }
 
 #ifdef OS_WIN 
@@ -555,7 +555,7 @@ WDL_DLGRET IPlugAPPHost::MainDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
       width = pPlug->GetEditorWidth();
       height = pPlug->GetEditorHeight();
 
-      ClientResize(hwndDlg, width, height);
+      pAppHost->WindowResize(width, height, true);
 
       ShowWindow(hwndDlg, SW_SHOW);
       return 1;

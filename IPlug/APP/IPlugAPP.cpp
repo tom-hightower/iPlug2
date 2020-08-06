@@ -36,22 +36,14 @@ IPlugAPP::IPlugAPP(const InstanceInfo& info, const Config& config)
 }
 
 bool IPlugAPP::EditorResize(int viewWidth, int viewHeight)
-{
-  bool parentResized = false;
-    
+{    
   if (viewWidth != GetEditorWidth() || viewHeight != GetEditorHeight())
   {
-    #ifdef OS_MAC
-    const int titleBarOffset = 22;
-    RECT r;
-    GetWindowRect(gHWND, &r);
-    SetWindowPos(gHWND, 0, r.left, r.bottom - viewHeight - titleBarOffset, viewWidth, viewHeight + titleBarOffset, 0);
-    parentResized = true;
-    #endif
+    mAppHost->WindowResize(viewWidth, viewHeight, false);
     SetEditorSize(viewWidth, viewHeight);
   }
   
-  return parentResized;
+  return true;
 }
 
 bool IPlugAPP::SendMidiMsg(const IMidiMsg& msg)

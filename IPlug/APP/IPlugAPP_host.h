@@ -172,7 +172,8 @@ public:
   
   bool OpenWindow(HWND pParent);
   void CloseWindow();
-
+  void WindowResize(int nWidth, int nHeight, bool move);
+  
   bool Init();
   bool InitState();
   void UpdateINI();
